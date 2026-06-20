@@ -1150,30 +1150,29 @@ function videoCompletado(id) {
 
     setCardStatus(id, "completed");
 
-    // Al terminar el módulo 1 enviar email de verificación automáticamente
-    if (id === 1) {
-        const proc  = PROCEDURES.find(p => p.id === id);
-        const titulo = proc ? proc.title : "Módulo 1";
-        fetch("https://api.web3forms.com/submit", {
-            method:  "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                access_key: CONFIG.web3formsKey,
-                subject:    `[Dumoh Academy] ${app.user.nombre} completó el primer módulo`,
-                from_name:  "Dumoh Academy",
-                to:         CONFIG.adminEmail,
-                message:    `✅ El repartidor ${app.user.nombre} ha completado el primer módulo de formación.\n\nMódulo: ${titulo}\nFecha: ${app.user.fecha}\nHora: ${horaCorta(new Date())}`,
-            })
-        }).catch(e => console.warn("Email módulo 1:", e));
-        mostrarToast("✅ ¡Primer módulo completado!");
-    }
+    // Enviar email al completar cada módulo
+    const proc   = PROCEDURES.find(p => p.id === id);
+    const titulo  = proc ? proc.title : `Módulo ${id}`;
+    const seccion = proc ? proc.sectionTitle : "";
+    const total   = app.completados.size;
+    fetch("https://api.web3forms.com/submit", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            access_key: CONFIG.web3formsKey,
+            subject:    `[Dumoh Academy] ${app.user.nombre} — módulo ${total}/${TOTAL} completado`,
+            from_name:  "Dumoh Academy",
+            to:         CONFIG.adminEmail,
+            message:    `✅ ${app.user.nombre} ha completado un módulo de formación.\n\nSección: ${seccion}\nMódulo: ${titulo}\nProgreso: ${total} de ${TOTAL} módulos\nFecha: ${app.user.fecha}\nHora: ${horaCorta(new Date())}`,
+        })
+    }).catch(e => console.warn("Email módulo:", e));
 
     const va = document.getElementById("va-" + id);
     if (va) va.innerHTML = doneOverlay();
 
     actualizarProgreso();
     actualizarContadorSeccion(id);
-    if (id !== 1) mostrarToast("✅ Módulo completado");
+    mostrarToast("✅ Módulo completado");
 
     const siguiente = id + 1;
     if (PROCEDURES.find(p => p.id === siguiente)) {
