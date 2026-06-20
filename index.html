@@ -5,18 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dumoh Academy</title>
 
-    <!--
-    ═══════════════════════════════════════════════════════════════
-    EMAILJS — Envío de correo gratuito desde el navegador
-    ═══════════════════════════════════════════════════════════════
-    1. Crea cuenta en https://www.emailjs.com (200 emails/mes gratis)
-    2. Conecta tu correo en "Email Services"
-    3. Crea plantilla en "Email Templates" con variables:
-         {{nombre}}  {{email}}  {{fecha}}  {{hora}}  {{admin_email}}
-    4. Copia Public Key, Service ID y Template ID al objeto CONFIG
-    ═══════════════════════════════════════════════════════════════
-    -->
-    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <!-- Web3Forms: envío de email sin backend. Clave en web3forms.com (gratis) -->
 
     <style>
         /* ────────── Variables de diseño ────────── */
@@ -521,10 +510,6 @@
                 <input id="inp-nombre" type="text" placeholder="Ej: Juan García López" required autocomplete="name">
             </div>
             <div class="field">
-                <label for="inp-email">Correo electrónico</label>
-                <input id="inp-email" type="email" placeholder="tu@email.com" required autocomplete="email">
-            </div>
-            <div class="field">
                 <label for="inp-fecha">Fecha de formación</label>
                 <input id="inp-fecha" type="text" readonly>
             </div>
@@ -595,10 +580,6 @@
                 <span class="val" id="final-nombre">—</span>
             </div>
             <div class="summary-row">
-                <span class="lbl">Email</span>
-                <span class="val" id="final-email">—</span>
-            </div>
-            <div class="summary-row">
                 <span class="lbl">Fecha</span>
                 <span class="val" id="final-fecha">—</span>
             </div>
@@ -624,11 +605,10 @@
    ════════════════════════════════════════════════════════════════ */
 
 const CONFIG = {
-    emailjs: {
-        publicKey:  "TU_PUBLIC_KEY_AQUI",    // Account → General → Public Key
-        serviceId:  "TU_SERVICE_ID_AQUI",    // Email Services → Service ID
-        templateId: "TU_TEMPLATE_ID_AQUI",   // Email Templates → Template ID
-    },
+    // Web3Forms — obtén tu clave gratis en https://web3forms.com
+    // Pon tu email, haz clic en "Create Access Key" y pega la clave aquí
+    web3formsKey: "fd99ade1-05da-4723-9ec6-61511eb37bb8",
+
     // Correo del responsable que recibirá el aviso de finalización
     adminEmail: "porteousfacundo@gmail.com",
 };
@@ -802,11 +782,6 @@ const app = {
    ════════════════════════════════════════════════════════════════ */
 document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("inp-fecha").value = fechaLarga(new Date());
-    try {
-        if (typeof emailjs !== "undefined") emailjs.init(CONFIG.emailjs.publicKey);
-    } catch(e) {
-        console.warn("EmailJS no disponible:", e);
-    }
 });
 
 /* ════════════════════════════════════════════════════════════════
@@ -815,7 +790,6 @@ document.addEventListener("DOMContentLoaded", () => {
 function iniciarFormacion(e) {
     e.preventDefault();
     app.user.nombre = document.getElementById("inp-nombre").value.trim();
-    app.user.email  = document.getElementById("inp-email").value.trim();
     app.user.fecha  = document.getElementById("inp-fecha").value;
 
     document.getElementById("screen-form").style.display = "none";
@@ -1150,30 +1124,25 @@ async function finalizarFormacion() {
     mostrarPantallaFinal(horaFin);
 }
 
-/**
- * Envía el email de aviso usando EmailJS.
- * Variables para la plantilla: {{nombre}} {{email}} {{fecha}} {{hora}} {{admin_email}}
- */
+// Envía aviso a central via Web3Forms (sin backend, sin cuenta)
 function enviarEmail(hora) {
-    if (typeof emailjs === "undefined") return Promise.reject(new Error("EmailJS no cargado"));
-    return emailjs.send(
-        CONFIG.emailjs.serviceId,
-        CONFIG.emailjs.templateId,
-        {
-            admin_email: CONFIG.adminEmail,
-            nombre:      app.user.nombre,
-            email:       app.user.email,
-            fecha:       app.user.fecha,
-            hora:        hora,
-        }
-    );
+    return fetch("https://api.web3forms.com/submit", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            access_key: CONFIG.web3formsKey,
+            subject:    `[Dumoh Academy] ${app.user.nombre} ha completado la formación`,
+            from_name:  "Dumoh Academy",
+            to:         CONFIG.adminEmail,
+            message:    `El repartidor ${app.user.nombre} ha completado todos los módulos de formación.\n\nFecha: ${app.user.fecha}\nHora de finalización: ${hora}`,
+        })
+    }).then(r => { if (!r.ok) throw new Error("Error " + r.status); return r.json(); });
 }
 
 function mostrarPantallaFinal(hora) {
     document.getElementById("screen-training").style.display = "none";
 
     document.getElementById("final-nombre").textContent = app.user.nombre;
-    document.getElementById("final-email").textContent  = app.user.email;
     document.getElementById("final-fecha").textContent  = app.user.fecha;
     document.getElementById("final-hora").textContent   = hora;
 
