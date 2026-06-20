@@ -852,7 +852,8 @@ const SECTIONS = [
 const PROCEDURES = [];
 let _id = 1;
 SECTIONS.forEach(section => {
-    section.procedures.forEach((proc, idx) => {
+    const visibles = section.procedures.filter(p => p.videoId !== null);
+    visibles.forEach((proc, idx) => {
         PROCEDURES.push({
             ...proc,
             id:              _id++,
@@ -860,7 +861,7 @@ SECTIONS.forEach(section => {
             sectionEmoji:    section.emoji,
             sectionColor:    section.color,
             isFirstInSection: idx === 0,
-            sectionTotal:    section.procedures.length,
+            sectionTotal:    visibles.length,
         });
     });
 });
@@ -1221,18 +1222,11 @@ function actualizarContadorSeccion(completedId) {
     const proc = PROCEDURES.find(p => p.id === completedId);
     if (!proc) return;
 
-    const section = SECTIONS.find(s => s.title === proc.sectionTitle);
-    if (!section) return;
+    const procsInSection = PROCEDURES.filter(p => p.sectionTitle === proc.sectionTitle);
+    const done = procsInSection.filter(p => app.completados.has(p.id)).length;
 
-    // Contar completados en esta sección
-    const procIdsInSection = section.procedures.map((_, i) => {
-        const offset = PROCEDURES.findIndex(p => p.sectionTitle === section.title);
-        return offset + i + 1;
-    });
-    const done = procIdsInSection.filter(pid => app.completados.has(pid)).length;
-
-    const countEl = document.getElementById("scount-" + section.title.replace(/\s/g, "_"));
-    if (countEl) countEl.textContent = done + " / " + section.procedures.length;
+    const countEl = document.getElementById("scount-" + proc.sectionTitle.replace(/\s/g, "_"));
+    if (countEl) countEl.textContent = done + " / " + procsInSection.length;
 }
 
 function mostrarFinalizacion() {
