@@ -722,9 +722,6 @@ const CONFIG = {
  */
 const TEST_MODE = new URLSearchParams(window.location.search).has("test");
 
-// ⚠️ TEMPORAL — Muestra el botón "Finalizar" al acabar el módulo 1 para probar el correo
-// Cambia a false cuando confirmes que el correo llega
-const TEST_EMAIL_MODULO_1 = true;
 
 /**
  * MÓDULOS DE FORMACIÓN organizados por sección.
@@ -1153,18 +1150,34 @@ function videoCompletado(id) {
 
     setCardStatus(id, "completed");
 
+    // Al terminar el módulo 1 enviar email de verificación automáticamente
+    if (id === 1) {
+        const proc  = PROCEDURES.find(p => p.id === id);
+        const titulo = proc ? proc.title : "Módulo 1";
+        fetch("https://api.web3forms.com/submit", {
+            method:  "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                access_key: CONFIG.web3formsKey,
+                subject:    `[Dumoh Academy] ${app.user.nombre} completó el primer módulo`,
+                from_name:  "Dumoh Academy",
+                to:         CONFIG.adminEmail,
+                message:    `✅ El repartidor ${app.user.nombre} ha completado el primer módulo de formación.\n\nMódulo: ${titulo}\nFecha: ${app.user.fecha}\nHora: ${horaCorta(new Date())}`,
+            })
+        }).catch(e => console.warn("Email módulo 1:", e));
+        mostrarToast("✅ ¡Primer módulo completado!");
+    }
+
     const va = document.getElementById("va-" + id);
     if (va) va.innerHTML = doneOverlay();
 
     actualizarProgreso();
     actualizarContadorSeccion(id);
-    mostrarToast("✅ Módulo completado");
+    if (id !== 1) mostrarToast("✅ Módulo completado");
 
     const siguiente = id + 1;
     if (PROCEDURES.find(p => p.id === siguiente)) {
         desbloquearProcedimiento(siguiente);
-        // TEMPORAL: muestra el botón finalizar al acabar el módulo 1 para probar el email
-        if (TEST_EMAIL_MODULO_1 && id === 1) mostrarFinalizacion();
     } else {
         mostrarFinalizacion();
     }
