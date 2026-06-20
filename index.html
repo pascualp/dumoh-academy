@@ -712,6 +712,10 @@ const CONFIG = {
  */
 const TEST_MODE = new URLSearchParams(window.location.search).has("test");
 
+// ⚠️ TEMPORAL — Muestra el botón "Finalizar" al acabar el módulo 1 para probar el correo
+// Cambia a false cuando confirmes que el correo llega
+const TEST_EMAIL_MODULO_1 = true;
+
 /**
  * MÓDULOS DE FORMACIÓN organizados por sección.
  *
@@ -808,7 +812,7 @@ const SECTIONS = [
             {
                 title: "Cómo entregar un pedido",
                 desc:  "Protocolo de recogida y entrega de pedidos de McDonald's.",
-                videoId: "IQ76lJV-KPo",
+                videoId: "lQ76ljV-KPo",
             },
         ],
     },
@@ -1136,6 +1140,8 @@ function videoCompletado(id) {
     const siguiente = id + 1;
     if (PROCEDURES.find(p => p.id === siguiente)) {
         desbloquearProcedimiento(siguiente);
+        // TEMPORAL: muestra el botón finalizar al acabar el módulo 1 para probar el email
+        if (TEST_EMAIL_MODULO_1 && id === 1) mostrarFinalizacion();
     } else {
         mostrarFinalizacion();
     }
