@@ -740,7 +740,8 @@ const SECTIONS = [
     {
         title: "Skello",
         emoji: "📋",
-        color: "#7C3AED",  // morado Skello
+        logo:  "https://logo.clearbit.com/skello.io",
+        color: "#7C3AED",
         desc: "Gestión de turnos y documentación",
         procedures: [
             {
@@ -1191,7 +1192,7 @@ function setCardStatus(id, status) {
     if (card)  card.className = "card " + status;
 
     const num   = document.getElementById("num-" + id);
-    if (num)   num.textContent = numIcon(id, status);
+    if (num)   num.innerHTML = numIcon(id, status);
 
     const badge = document.getElementById("badge-" + id);
     if (badge) badge.textContent = statusLabel(status);
